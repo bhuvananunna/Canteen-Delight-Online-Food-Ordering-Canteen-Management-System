@@ -1,0 +1,200 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "User profiles representing students, staff, and canteen admins.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique identifier matching request.auth.uid"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the student or canteen staff"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["customer", "admin"],
+          "description": "Role of the user in the canteen system"
+        },
+        "walletBalance": {
+          "type": "number",
+          "description": "Amount of preloaded digital wallet balance in USD"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of user account registration"
+        }
+      },
+      "required": ["uid", "name", "email", "role", "walletBalance", "createdAt"]
+    },
+    "menuItem": {
+      "title": "MenuItem",
+      "description": "Gourmet dishes and items in the canteen catalog.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique food item ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the dish"
+        },
+        "description": {
+          "type": "string",
+          "description": "Mouthwatering descriptions of the dish ingredients"
+        },
+        "price": {
+          "type": "number",
+          "description": "Pricing of the dish in USD"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["mains", "snacks", "beverages", "desserts", "breakfast"],
+          "description": "Meal category bucket"
+        },
+        "image": {
+          "type": "string",
+          "format": "uri",
+          "description": "Unsplash image link for food item visual display"
+        },
+        "isVeg": {
+          "type": "boolean",
+          "description": "Indicates whether the dish is purely vegetarian"
+        },
+        "isAvailable": {
+          "type": "boolean",
+          "description": "Indicates if the dish is currently in stock"
+        },
+        "prepTime": {
+          "type": "number",
+          "description": "Estimated food prep time in minutes"
+        },
+        "rating": {
+          "type": "number",
+          "description": "Review rating of the dish"
+        }
+      },
+      "required": ["id", "name", "description", "price", "category", "image", "isVeg", "isAvailable", "prepTime", "rating"]
+    },
+    "order": {
+      "title": "Order",
+      "description": "Campus food ordering transactions.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique order tracking ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID of the customer who ordered"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Display name of customer"
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Email of customer"
+        },
+        "total": {
+          "type": "number",
+          "description": "Total checkout price in USD"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "preparing", "ready", "completed", "cancelled"],
+          "description": "Current status of the cooking progression"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["takeaway", "dinein"],
+          "description": "Eating location preference"
+        },
+        "scheduledTime": {
+          "type": "string",
+          "description": "Target pickup schedule hour"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of order execution"
+        },
+        "orderNumber": {
+          "type": "string",
+          "description": "A simplified canteen code e.g. C-104"
+        }
+      },
+      "required": ["userId", "userName", "userEmail", "total", "status", "type", "scheduledTime", "createdAt", "orderNumber"]
+    },
+    "transaction": {
+      "title": "Transaction",
+      "description": "Wallet balance accounting ledger log.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ledger entry ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who topped up or ordered"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Transaction amount in USD"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["credit", "debit"],
+          "description": "Transaction nature"
+        },
+        "description": {
+          "type": "string",
+          "description": "Explanatory statement of action"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Transaction date-time"
+        }
+      },
+      "required": ["userId", "amount", "type", "description", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/user"
+      },
+      "description": "Collects detailed student user profiles."
+    },
+    "menu/{menuId}": {
+      "schema": {
+        "$ref": "#/entities/menuItem"
+      },
+      "description": "Stores canteen culinary offerings catalog."
+    },
+    "orders/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/order"
+      },
+      "description": "Logs active queue and historical receipts."
+    },
+    "transactions/{txId}": {
+      "schema": {
+        "$ref": "#/entities/transaction"
+      },
+      "description": "Collects digital ledger transaction logs."
+    }
+  }
+}

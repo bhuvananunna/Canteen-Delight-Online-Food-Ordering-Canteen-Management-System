@@ -1,0 +1,8 @@
+{
+  "name": "Food Canteen Ordering & Management System",
+  "description": "A premium, real-time campus or school food canteen management and ordering application powered by Firebase. Includes customizer choices, an interactive step-by-step cooking progress tracker, digital wallets, and an admin management dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

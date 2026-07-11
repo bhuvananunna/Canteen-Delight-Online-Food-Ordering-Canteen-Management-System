@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- REUSABLE SECURITY PRIMITIVES ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Role Lookup: check if user is an admin
+    function isAdmin() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // --- COLLECTION MATCHES ---
+
+    // 1. USERS COLLECTION
+    match /users/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isSignedIn() && isOwner(userId) && isValidUser(request.resource.data) && (
+        // Prevent spoofing role fields
+        request.resource.data.role == resource.data.role || isAdmin()
+      );
+    }
+
+    // 2. MENU COLLECTION
+    match /menu/{menuId} {
+      allow read: if true; // Everyone can browse food menu items
+      allow write: if isAdmin(); // Only admins can add, update or delete dishes
+    }
+
+    // 3. ORDERS COLLECTION
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && isValidOrder(request.resource.data);
+      allow update: if isSignedIn() && (
+        isAdmin() || 
+        (resource.data.userId == request.auth.uid && request.resource.data.status == "cancelled" && resource.data.status == "pending")
+      );
+    }
+
+    // 4. TRANSACTIONS COLLECTION
+    match /transactions/{txId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && isValidTransaction(request.resource.data);
+    }
+
+    // --- VALIDATION SCHEMAS AND FIELDS HELPERS ---
+
+    function isValidUser(data) {
+      return data.uid is string &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.email is string && data.email.size() <= 150 &&
+        data.role in ["customer", "admin"] &&
+        data.walletBalance is number && data.walletBalance >= 0;
+    }
+
+    function isValidOrder(data) {
+      return data.userId is string &&
+        data.userName is string && data.userName.size() <= 100 &&
+        data.userEmail is string && data.userEmail.size() <= 150 &&
+        data.total is number && data.total >= 0 &&
+        data.status in ["pending", "preparing", "ready", "completed", "cancelled"] &&
+        data.type in ["takeaway", "dinein"] &&
+        data.scheduledTime is string &&
+        data.orderNumber is string;
+    }
+
+    function isValidTransaction(data) {
+      return data.userId is string &&
+        data.amount is number && data.amount > 0 &&
+        data.type in ["credit", "debit"] &&
+        data.description is string && data.description.size() <= 150;
+    }
+  }
+}
