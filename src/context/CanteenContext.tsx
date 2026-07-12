@@ -7,7 +7,10 @@ import {
   signInWithPopup, 
   GoogleAuthProvider, 
   signOut as fbSignOut,
-  User as FirebaseUser
+  User as FirebaseUser,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
 import { 
   collection, 
@@ -37,9 +40,12 @@ interface CanteenContextType {
   
   // Auth actions
   loginWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
   simulateLogin: (role: 'customer' | 'admin') => void;
   logout: () => Promise<void>;
   toggleUserRole: () => void;
+  promoteToAdmin: () => Promise<boolean>;
   
   // Cart actions
   addToCart: (item: MenuItem, quantity: number, spice?: string, addons?: { name: string; price: number }[], notes?: string) => void;
@@ -108,8 +114,8 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     let unsubscribeAuth: () => void = () => {};
     let unsubscribeMenu: () => void = () => {};
-    let unsubscribeOrders: () => void = () => {};
     let unsubscribeUserDoc: () => void = () => {};
+    let unsubscribeTransactions: () => void = () => {};
 
     const initializeSimulatedMode = () => {
       setIsFirebaseMode(false);
@@ -156,90 +162,98 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Subscribe to auth state
         unsubscribeAuth = onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
           setIsLoading(true);
+
+          // Always clean up previous user doc & transactions listeners before creating new ones or signing out
+          if (unsubscribeUserDoc) {
+            try {
+              unsubscribeUserDoc();
+            } catch (e) {}
+            unsubscribeUserDoc = () => {};
+          }
+          if (unsubscribeTransactions) {
+            try {
+              unsubscribeTransactions();
+            } catch (e) {}
+            unsubscribeTransactions = () => {};
+          }
+
           if (fbUser) {
-            // Check if user has profile in firestore
-            const userRef = doc(db, 'users', fbUser.uid);
-            let userSnap = await getDoc(userRef);
-            
-            let profileData: UserProfile;
-
-            if (userSnap.exists()) {
-              profileData = userSnap.data() as UserProfile;
-            } else {
-              // Create user profile
-              profileData = {
-                uid: fbUser.uid,
-                name: fbUser.displayName || 'Anonymous Canteen Guest',
-                email: fbUser.email || '',
-                role: fbUser.email?.includes('admin') || fbUser.email === 'bhuvana.nunna0724@gmail.com' ? 'admin' : 'customer',
-                walletBalance: 20.00, // starting gift balance
-                createdAt: new Date().toISOString()
-              };
-              await setDoc(userRef, profileData);
-              showToast(`Welcome! Added $20.00 welcome gift to your digital canteen wallet!`, 'success');
+            try {
+              // Check if user has profile in firestore
+              const userRef = doc(db, 'users', fbUser.uid);
+              let userSnap = await getDoc(userRef);
               
-              // Add a transaction log
-              await addDoc(collection(db, 'transactions'), {
-                userId: fbUser.uid,
-                amount: 20.00,
-                type: 'credit',
-                description: 'Welcome Gift Balance',
-                createdAt: new Date().toISOString()
-              });
-            }
+              let profileData: UserProfile;
+              const pendingAdminUpgrade = localStorage.getItem("foodcanteen_pending_admin") === "true";
+              const pendingName = localStorage.getItem("foodcanteen_pending_name");
 
-            setCurrentUser(profileData);
-
-            // Subscribe to real-time changes on user's doc
-            unsubscribeUserDoc = onSnapshot(userRef, (snap) => {
-              if (snap.exists()) {
-                setCurrentUser(snap.data() as UserProfile);
+              if (userSnap.exists()) {
+                profileData = userSnap.data() as UserProfile;
+                const isSpecialAdmin = fbUser.email === 'bhuvana.nunna0724@gmail.com' || fbUser.email?.includes('admin');
+                if ((pendingAdminUpgrade || isSpecialAdmin) && profileData.role !== 'admin') {
+                  profileData.role = 'admin';
+                  await updateDoc(userRef, { role: 'admin' });
+                }
+              } else {
+                // Create user profile
+                profileData = {
+                  uid: fbUser.uid,
+                  name: pendingName || fbUser.displayName || 'Anonymous Canteen Guest',
+                  email: fbUser.email || '',
+                  role: fbUser.email?.includes('admin') || fbUser.email === 'bhuvana.nunna0724@gmail.com' || pendingAdminUpgrade ? 'admin' : 'customer',
+                  walletBalance: 20.00, // starting gift balance
+                  createdAt: new Date().toISOString()
+                };
+                await setDoc(userRef, profileData);
+                showToast(`Welcome! Added $20.00 welcome gift to your digital canteen wallet!`, 'success');
+                
+                // Add a transaction log
+                await addDoc(collection(db, 'transactions'), {
+                  userId: fbUser.uid,
+                  amount: 20.00,
+                  type: 'credit',
+                  description: 'Welcome Gift Balance',
+                  createdAt: new Date().toISOString()
+                });
               }
-            }, (err) => {
-              console.error("User doc subscription error:", err);
-            });
 
-            // Subscribe to transaction logs
-            const txQuery = query(
-              collection(db, 'transactions'),
-              where('userId', '==', fbUser.uid)
-            );
-            onSnapshot(txQuery, (snap) => {
-              const txs: Transaction[] = [];
-              snap.forEach((doc) => {
-                txs.push({ id: doc.id, ...doc.data() } as Transaction);
+              if (pendingAdminUpgrade) {
+                localStorage.removeItem("foodcanteen_pending_admin");
+              }
+              if (pendingName) {
+                localStorage.removeItem("foodcanteen_pending_name");
+              }
+
+              setCurrentUser(profileData);
+
+              // Subscribe to real-time changes on user's doc
+              unsubscribeUserDoc = onSnapshot(userRef, (snap) => {
+                if (snap.exists()) {
+                  setCurrentUser(snap.data() as UserProfile);
+                }
+              }, (err) => {
+                console.warn("User doc subscription warn (safe during sign-out transitions):", err);
               });
-              // Sort client-side by createdAt desc to bypass missing index requirements
-              txs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-              setTransactions(txs);
-            }, (err) => {
-              console.warn("Failed to subscribe transactions, likely permission or missing index.", err);
-            });
 
-            // Subscribe to orders
-            let ordersQuery;
-            if (profileData.role === 'admin') {
-              // Admin gets all orders - single-field order does not require composite index
-              ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
-            } else {
-              // Customer gets only their orders - omit orderBy inside the Firestore query to avoid index requirement
-              ordersQuery = query(
-                collection(db, 'orders'),
+              // Subscribe to transaction logs
+              const txQuery = query(
+                collection(db, 'transactions'),
                 where('userId', '==', fbUser.uid)
               );
-            }
-
-            unsubscribeOrders = onSnapshot(ordersQuery, (snap) => {
-              const ords: Order[] = [];
-              snap.forEach((doc) => {
-                ords.push({ id: doc.id, ...doc.data() } as Order);
+              unsubscribeTransactions = onSnapshot(txQuery, (snap) => {
+                const txs: Transaction[] = [];
+                snap.forEach((doc) => {
+                  txs.push({ id: doc.id, ...doc.data() } as Transaction);
+                });
+                // Sort client-side by createdAt desc to bypass missing index requirements
+                txs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setTransactions(txs);
+              }, (err) => {
+                console.warn("Failed to subscribe transactions (safe during sign-out transitions):", err);
               });
-              // Sort client-side by createdAt desc to bypass missing index requirements
-              ords.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-              setOrders(ords);
-            }, (err) => {
-              console.error("Order subscription error:", err);
-            });
+            } catch (err) {
+              console.error("Error loading user profile in auth callback:", err);
+            }
 
           } else {
             setCurrentUser(null);
@@ -278,10 +292,45 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => {
       unsubscribeAuth();
       unsubscribeMenu();
-      unsubscribeOrders();
       unsubscribeUserDoc();
+      unsubscribeTransactions();
     };
   }, [isFirebaseMode]);
+
+  // Reactive Orders Subscription for Firebase Mode
+  useEffect(() => {
+    if (!isFirebaseMode || !auth || !db || !currentUser) {
+      return;
+    }
+
+    let ordersQuery;
+    if (currentUser.role === 'admin') {
+      // Admin gets all orders - single-field order does not require composite index
+      ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    } else {
+      // Customer gets only their orders
+      ordersQuery = query(
+        collection(db, 'orders'),
+        where('userId', '==', currentUser.uid)
+      );
+    }
+
+    const unsubscribe = onSnapshot(ordersQuery, (snap) => {
+      const ords: Order[] = [];
+      snap.forEach((doc) => {
+        ords.push({ id: doc.id, ...doc.data() } as Order);
+      });
+      // Sort client-side by createdAt desc to bypass missing index requirements
+      ords.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setOrders(ords);
+    }, (err) => {
+      console.warn("Order subscription warn (safe during sign-out transitions):", err);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isFirebaseMode, currentUser?.uid, currentUser?.role, db]);
 
   // Reactive Menu Seeding for Admin
   useEffect(() => {
@@ -345,20 +394,76 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setIsFirebaseMode(true);
       showToast("Signed in successfully with Google!", "success");
     } catch (error: any) {
-      console.error("Firebase auth error:", error);
-      
-      if (error?.code === 'auth/unauthorized-domain') {
-        showToast(
-          "Domain Unauthorized: Please add this preview URL to your 'Authorized Domains' list in the Firebase Console (Auth > Settings).",
-          "error"
-        );
-      } else if (error?.code === 'auth/popup-closed-by-user') {
+      if (error?.code === 'auth/popup-closed-by-user') {
+        console.warn("Firebase auth warning (popup closed by user):", error);
         showToast("Sign-in window closed before finishing. Please try again!", "info");
-      } else if (error?.code === 'auth/popup-blocked') {
-        showToast("Popup blocked by browser. Please allow popups for this site and retry!", "error");
       } else {
-        showToast(`Auth failed: ${error?.message || 'Check Firebase setup or use Simulated Mode!'}`, "error");
+        console.error("Firebase auth error:", error);
+        if (error?.code === 'auth/unauthorized-domain') {
+          showToast(
+            "Domain Unauthorized: Please add this preview URL to your 'Authorized Domains' list in the Firebase Console (Auth > Settings).",
+            "error"
+          );
+        } else if (error?.code === 'auth/popup-blocked') {
+          showToast("Popup blocked by browser. Please allow popups for this site and retry!", "error");
+        } else {
+          showToast(`Auth failed: ${error?.message || 'Check Firebase setup or use Simulated Mode!'}`, "error");
+        }
       }
+    }
+  };
+
+  // Auth: Email/Password login
+  const signInWithEmail = async (email: string, password: string) => {
+    if (!auth) {
+      showToast("Firebase Auth not initialized.", "error");
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setIsFirebaseMode(true);
+      showToast("Signed in successfully with Email!", "success");
+    } catch (error: any) {
+      console.warn("Email sign in warning:", error);
+      let errMsg = error?.message || "Please check your credentials.";
+      if (error?.code === 'auth/wrong-password' || error?.code === 'auth/user-not-found' || error?.code === 'auth/invalid-credential') {
+        errMsg = "Invalid email or password. Please try again.";
+      } else if (error?.code === 'auth/invalid-email') {
+        errMsg = "Invalid email address format.";
+      }
+      showToast(errMsg, "error");
+      throw new Error(errMsg);
+    }
+  };
+
+  // Auth: Email/Password registration
+  const signUpWithEmail = async (email: string, password: string, name: string) => {
+    if (!auth) {
+      showToast("Firebase Auth not initialized.", "error");
+      return;
+    }
+    try {
+      // Store the pending name in localStorage so the auth state observer uses it
+      localStorage.setItem("foodcanteen_pending_name", name);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Update the user profile with the display name as well
+      await updateProfile(userCredential.user, { displayName: name });
+      
+      setIsFirebaseMode(true);
+      showToast("Account created successfully with Email!", "success");
+    } catch (error: any) {
+      console.warn("Email sign up warning:", error);
+      let errMsg = error?.message || "Could not create account.";
+      if (error?.code === 'auth/email-already-in-use') {
+        errMsg = "This email is already registered. Please sign in instead.";
+      } else if (error?.code === 'auth/weak-password') {
+        errMsg = "Password is too weak. Must be at least 6 characters.";
+      } else if (error?.code === 'auth/invalid-email') {
+        errMsg = "Invalid email address format.";
+      }
+      showToast(errMsg, "error");
+      throw new Error(errMsg);
     }
   };
 
@@ -410,6 +515,26 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setCurrentUser(prev => prev ? { ...prev, role: newRole } : null);
       setActiveView(newRole === 'admin' ? 'admin' : 'menu');
       showToast(`Switched role to ${newRole}!`, 'success');
+    }
+  };
+
+  const promoteToAdmin = async (): Promise<boolean> => {
+    if (isFirebaseMode && auth?.currentUser && db) {
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      try {
+        await updateDoc(userRef, { role: 'admin' });
+        setCurrentUser(prev => prev ? { ...prev, role: 'admin' } : null);
+        setActiveView('admin');
+        showToast("Manager role unlocked successfully via Google Account!", "success");
+        return true;
+      } catch (err) {
+        console.error("Failed to promote user to admin in Firestore:", err);
+        showToast("Error updating database. Please try again.", "error");
+        return false;
+      }
+    } else {
+      simulateLogin('admin');
+      return true;
     }
   };
 
@@ -705,9 +830,12 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isFirebaseMode,
       
       loginWithGoogle,
+      signInWithEmail,
+      signUpWithEmail,
       simulateLogin,
       logout,
       toggleUserRole,
+      promoteToAdmin,
       
       addToCart,
       removeFromCart,

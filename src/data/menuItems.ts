@@ -1,4 +1,10 @@
 import { MenuItem } from '../types';
+import s1Image from '../assets/images/regenerated_image_1783841783901.avif';
+import s4Image from '../assets/images/regenerated_image_1783841785330.jpg';
+import s7Image from '../assets/images/regenerated_image_1783841782254.jpg';
+import d3Image from '../assets/images/regenerated_image_1783841786703.webp';
+import d4Image from '../assets/images/regenerated_image_1783841787722.jpg';
+
 
 export const INITIAL_MENU_ITEMS: MenuItem[] = [
   // BREAKFAST
@@ -71,7 +77,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Flaky golden pastry cones filled with spiced potato and pea mash, served with tangy sweet tamarind and spicy mint chutneys.',
     price: 1.49,
     category: 'snacks',
-    image: 'https://images.unsplash.com/photo-1601050690597-df056fb4ce78?auto=format&fit=crop&q=80&w=600',
+    image: s1Image,
     isVeg: true,
     isAvailable: true,
     prepTime: 5,
@@ -117,7 +123,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Crispy batter-fried cauliflower florets tossed in a sweet, savory, and tangy soy-garlic sauce with spring onions.',
     price: 4.99,
     category: 'snacks',
-    image: 'https://images.unsplash.com/photo-1601050690597-df056fb4ce78?auto=format&fit=crop&q=80&w=600',
+    image: s4Image,
     isVeg: true,
     isAvailable: true,
     prepTime: 10,
@@ -155,7 +161,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Oven-baked crusty baguette slices loaded with dynamic garlic butter, melted premium mozzarella, and Italian herbs.',
     price: 4.29,
     category: 'snacks',
-    image: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&q=80&w=600',
+    image: s7Image,
     isVeg: true,
     isAvailable: true,
     prepTime: 7,
@@ -372,7 +378,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Two soft and sweet milk-solid spheres dipped in deep aromatic sugar syrup flavored with rosewater, paired with vanilla ice cream.',
     price: 3.29,
     category: 'desserts',
-    image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=80&w=600',
+    image: d3Image,
     isVeg: true,
     isAvailable: true,
     prepTime: 5,
@@ -384,7 +390,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Rich, dense and incredibly creamy slice of classic baked cheesecake layered over a buttery graham cracker crumb crust.',
     price: 4.49,
     category: 'desserts',
-    image: 'https://images.unsplash.com/photo-1524351199679-46cddf530c04?auto=format&fit=crop&q=80&w=600',
+    image: d4Image,
     isVeg: true,
     isAvailable: true,
     prepTime: 5,

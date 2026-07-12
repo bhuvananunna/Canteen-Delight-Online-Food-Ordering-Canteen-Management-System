@@ -69,25 +69,34 @@ export const Navbar: React.FC<NavbarProps> = ({ onCartOpen, onAuthOpen }) => {
           </div>
 
           {/* DESKTOP NAV ITEMS */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center space-x-1.5" id="desktop-nav-items-container">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeView === item.id;
               return (
                 <button
                   key={item.id}
+                  id={`nav-item-btn-${item.id}`}
                   onClick={() => setActiveView(item.id as any)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    isActive 
-                      ? 'bg-stone-900 text-amber-500 border border-stone-800 shadow-sm' 
-                      : 'text-stone-400 hover:bg-stone-900/60 hover:text-stone-200'
-                  }`}
+                  className="relative flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 group cursor-pointer"
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? 'text-amber-500' : 'text-stone-500'}`} />
-                  <span>{item.label}</span>
-                  {item.id === 'tracker' && currentUser && (
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeNavBackground"
+                      id="active-nav-bg-indicator"
+                      className="absolute inset-0 bg-stone-900 border border-stone-800/80 rounded-xl shadow-inner z-0"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
                   )}
+                  <span className="relative z-10 flex items-center space-x-2">
+                    <Icon className={`h-4 w-4 transition-colors duration-200 ${isActive ? 'text-amber-500' : 'text-stone-500 group-hover:text-stone-300'}`} />
+                    <span className={isActive ? 'text-amber-500 font-semibold' : 'text-stone-400 group-hover:text-stone-200'}>
+                      {item.label}
+                    </span>
+                    {item.id === 'tracker' && currentUser && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    )}
+                  </span>
                 </button>
               );
             })}
@@ -169,26 +178,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onCartOpen, onAuthOpen }) => {
                           </span>
                         </div>
 
-                        {/* Role switcher toggle */}
-                        <div className="px-4 py-2.5 border-b border-stone-800/80 flex items-center justify-between">
-                          <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-stone-300">Admin Mode</span>
-                            <span className="text-[10px] text-stone-500">Toggle manager view</span>
-                          </div>
+                        {currentUser.role !== 'admin' && (
                           <button
                             onClick={() => {
-                              toggleUserRole();
+                              onAuthOpen();
                               setDropdownOpen(false);
                             }}
-                            className="text-amber-500 hover:text-amber-400 transition-colors"
+                            className="w-full text-left flex items-center space-x-2 px-4 py-3 text-sm text-amber-500 hover:bg-stone-900/60 font-medium transition-all border-b border-stone-800/80 cursor-pointer"
                           >
-                            {currentUser.role === 'admin' ? (
-                              <ToggleRight className="h-7 w-7" />
-                            ) : (
-                              <ToggleLeft className="h-7 w-7 text-stone-700" />
-                            )}
+                            <ShieldCheck className="h-4 w-4" />
+                            <span>Unlock Canteen Manager</span>
                           </button>
-                        </div>
+                        )}
 
                         <button
                           onClick={() => {
@@ -296,18 +297,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onCartOpen, onAuthOpen }) => {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        toggleUserRole();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full text-left flex items-center justify-between px-4 py-2.5 text-sm text-stone-300 hover:bg-stone-900 font-medium"
-                    >
-                      <span>Admin/Manager View</span>
-                      <span className="text-[10px] font-mono text-amber-500 font-semibold">
-                        {currentUser.role === 'admin' ? 'ACTIVE' : 'INACTIVE'}
-                      </span>
-                    </button>
 
                     <button
                       onClick={() => {
