@@ -55,15 +55,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onCartOpen, onAuthOpen }) => {
         <div className="flex justify-between h-16 items-center">
           {/* LOGO */}
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveView('menu')}>
-            <div className="bg-amber-500 p-2.5 rounded-xl text-[#0a0a0a] shadow-md shadow-amber-500/10">
-              <Utensils className="h-6 w-6" />
+            <div className="bg-gradient-to-tr from-amber-500 to-orange-600 p-2.5 rounded-xl text-[#0a0a0a] shadow-md shadow-amber-500/10">
+              <Utensils className="h-6 w-6 text-[#0a0a0a]" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-tight text-stone-100 font-sans">
-                Canteen<span className="text-amber-500">Delight</span>
+              <span className="text-xl font-extrabold tracking-tight text-stone-100 font-sans">
+                Canteen<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">Delight</span>
               </span>
-              <span className="text-[10px] font-mono text-stone-500 -mt-1 font-medium tracking-wider">
-                CAMPUS HUB ORDERING
+              <span className="text-[9px] font-mono text-stone-500 -mt-1 font-bold tracking-wider">
+                CAMPUS CULINARY HUB
               </span>
             </div>
           </div>
@@ -178,18 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onCartOpen, onAuthOpen }) => {
                           </span>
                         </div>
 
-                        {currentUser.role !== 'admin' && (
-                          <button
-                            onClick={() => {
-                              onAuthOpen();
-                              setDropdownOpen(false);
-                            }}
-                            className="w-full text-left flex items-center space-x-2 px-4 py-3 text-sm text-amber-500 hover:bg-stone-900/60 font-medium transition-all border-b border-stone-800/80 cursor-pointer"
-                          >
-                            <ShieldCheck className="h-4 w-4" />
-                            <span>Unlock Canteen Manager</span>
-                          </button>
-                        )}
+
 
                         <button
                           onClick={() => {

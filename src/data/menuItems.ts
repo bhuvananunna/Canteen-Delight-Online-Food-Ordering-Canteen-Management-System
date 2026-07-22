@@ -1,10 +1,13 @@
 import { MenuItem } from '../types';
-import s1Image from '../assets/images/regenerated_image_1783841783901.avif';
-import s4Image from '../assets/images/regenerated_image_1783841785330.jpg';
-import s7Image from '../assets/images/regenerated_image_1783841782254.jpg';
-import d3Image from '../assets/images/regenerated_image_1783841786703.webp';
-import d4Image from '../assets/images/regenerated_image_1783841787722.jpg';
-
+import idliSambarImg from '../assets/images/idli_sambar_plate_1784732300647.jpg';
+import springRollsImg from '../assets/images/spring_rolls_plate_1784732319247.jpg';
+import gulabJamunImg from '../assets/images/gulab_jamun_dessert_1784732333565.jpg';
+import gobiManchurianImg from '../assets/images/gobi_manchurian_dish_1784732346620.jpg';
+import cheesyGarlicBreadImg from '../assets/images/cheesy_garlic_bread_1784732358754.jpg';
+import choleBhatureImg from '../assets/images/chole_bhature_platter_1784733117108.jpg';
+import belgianWaffleImg from '../assets/images/belgian_chocolate_waffle_1784733133059.jpg';
+import maharajaThaliImg from '../assets/images/maharaja_veg_thali_1784733147396.jpg';
+import lemonHerbSalmonImg from '../assets/images/lemon_herb_salmon_1784733160330.jpg';
 
 export const INITIAL_MENU_ITEMS: MenuItem[] = [
   // BREAKFAST
@@ -47,7 +50,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Soft steamed rice cakes served with aromatic sambar and refreshing coconut and tomato chutneys.',
     price: 2.99,
     category: 'breakfast',
-    image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=80&w=600',
+    image: idliSambarImg,
     isVeg: true,
     isAvailable: true,
     prepTime: 8,
@@ -69,6 +72,38 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
       { name: 'Crumbled Feta Cheese', price: 0.60 }
     ]
   },
+  {
+    id: 'b5',
+    name: 'Chole Bhature Platter',
+    description: 'Fluffy, oversized fried leavened breads served with rich, spicy chickpea curry, pickled onions, green chilies, and tangy mint chutney.',
+    price: 4.99,
+    category: 'breakfast',
+    image: choleBhatureImg,
+    isVeg: true,
+    isAvailable: true,
+    prepTime: 12,
+    rating: 4.9,
+    spiceLevels: ['Medium', 'Spicy'],
+    addons: [
+      { name: 'Extra Bhatura', price: 1.00 }
+    ]
+  },
+  {
+    id: 'b6',
+    name: 'Belgian Chocolate Waffle',
+    description: 'Crispy, warm golden Belgian waffle smothered with premium dark and white chocolate sauces, topped with chocolate curls and sliced fresh strawberries.',
+    price: 4.79,
+    category: 'breakfast',
+    image: belgianWaffleImg,
+    isVeg: true,
+    isAvailable: true,
+    prepTime: 10,
+    rating: 4.8,
+    addons: [
+      { name: 'Scoop Vanilla Ice Cream', price: 0.80 },
+      { name: 'Extra Whipped Cream', price: 0.50 }
+    ]
+  },
 
   // STARTERS & SNACKS (Category: snacks)
   {
@@ -77,7 +112,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Flaky golden pastry cones filled with spiced potato and pea mash, served with tangy sweet tamarind and spicy mint chutneys.',
     price: 1.49,
     category: 'snacks',
-    image: s1Image,
+    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&q=80&w=600',
     isVeg: true,
     isAvailable: true,
     prepTime: 5,
@@ -123,7 +158,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Crispy batter-fried cauliflower florets tossed in a sweet, savory, and tangy soy-garlic sauce with spring onions.',
     price: 4.99,
     category: 'snacks',
-    image: s4Image,
+    image: gobiManchurianImg,
     isVeg: true,
     isAvailable: true,
     prepTime: 10,
@@ -149,7 +184,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Crispy paper-thin pastry rolls packed with stir-fried cabbage, carrots, and glass noodles. Served with sweet chili dipping sauce.',
     price: 3.99,
     category: 'snacks',
-    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=600',
+    image: springRollsImg,
     isVeg: true,
     isAvailable: true,
     prepTime: 8,
@@ -161,7 +196,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Oven-baked crusty baguette slices loaded with dynamic garlic butter, melted premium mozzarella, and Italian herbs.',
     price: 4.29,
     category: 'snacks',
-    image: s7Image,
+    image: cheesyGarlicBreadImg,
     isVeg: true,
     isAvailable: true,
     prepTime: 7,
@@ -169,6 +204,22 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     addons: [
       { name: 'Add Jalapeños', price: 0.40 },
       { name: 'Extra Mozzarella', price: 0.85 }
+    ]
+  },
+  {
+    id: 's8',
+    name: 'Supreme Cheesy Loaded Nachos',
+    description: 'Crispy corn tortilla chips piled high with creamy warm cheddar cheese sauce, black beans, tangy jalapeños, Pico de Gallo, fresh guacamole, and sour cream.',
+    price: 4.49,
+    category: 'snacks',
+    image: 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&q=80&w=600',
+    isVeg: true,
+    isAvailable: true,
+    prepTime: 8,
+    rating: 4.7,
+    addons: [
+      { name: 'Add Extra Cheese Sauce', price: 0.60 },
+      { name: 'Add Grilled Chicken Cubes', price: 1.50 }
     ]
   },
 
@@ -264,6 +315,39 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     prepTime: 10,
     rating: 4.6,
     spiceLevels: ['Mild', 'Medium', 'Spicy']
+  },
+  {
+    id: 'm7',
+    name: 'Royal Maharaja Veg Thali',
+    description: 'A complete campus feast featuring Paneer Butter Masala, slow-cooked Dal Makhani, mixed vegetable dry curry, aromatic Jeera rice, butter paratha, papad, salad, and a gulab jamun.',
+    price: 8.99,
+    category: 'mains',
+    image: maharajaThaliImg,
+    isVeg: true,
+    isAvailable: true,
+    prepTime: 18,
+    rating: 4.9,
+    spiceLevels: ['Medium', 'Spicy'],
+    addons: [
+      { name: 'Extra Butter Paratha', price: 1.00 },
+      { name: 'Extra Sweet Jamun', price: 0.75 }
+    ]
+  },
+  {
+    id: 'm8',
+    name: 'Grilled Lemon Herb Salmon',
+    description: 'Perfectly pan-seared fresh salmon fillet glazed with lemon-herb butter. Served alongside charred asparagus, broccoli, and garlic-infused mashed potatoes.',
+    price: 11.99,
+    category: 'mains',
+    image: lemonHerbSalmonImg,
+    isVeg: false,
+    isAvailable: true,
+    prepTime: 15,
+    rating: 4.9,
+    addons: [
+      { name: 'Extra Salmon Fillet', price: 4.50 },
+      { name: 'Extra Garlic Butter Mash', price: 1.50 }
+    ]
   },
 
   // DRINKS & BEVERAGES (Category: beverages)
@@ -378,7 +462,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Two soft and sweet milk-solid spheres dipped in deep aromatic sugar syrup flavored with rosewater, paired with vanilla ice cream.',
     price: 3.29,
     category: 'desserts',
-    image: d3Image,
+    image: gulabJamunImg,
     isVeg: true,
     isAvailable: true,
     prepTime: 5,
@@ -390,10 +474,27 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     description: 'Rich, dense and incredibly creamy slice of classic baked cheesecake layered over a buttery graham cracker crumb crust.',
     price: 4.49,
     category: 'desserts',
-    image: d4Image,
+    image: 'https://images.unsplash.com/photo-1524351199678-941a58a3df50?auto=format&fit=crop&q=80&w=600',
     isVeg: true,
     isAvailable: true,
     prepTime: 5,
     rating: 4.8
+  },
+  {
+    id: 'd5',
+    name: 'Sizzling Walnut Brownie',
+    description: 'A decadent, warm eggless chocolate walnut brownie served on a piping hot sizzling cast-iron skillet, topped with a scoop of cold vanilla ice cream and an overflowing cascade of hot chocolate fudge.',
+    price: 4.99,
+    category: 'desserts',
+    image: 'https://images.unsplash.com/photo-1564355808539-22fda35bed7e?auto=format&fit=crop&q=80&w=600',
+    isVeg: true,
+    isAvailable: true,
+    prepTime: 8,
+    rating: 4.9,
+    addons: [
+      { name: 'Extra Hot Chocolate Fudge', price: 0.50 },
+      { name: 'Add Sliced Almonds', price: 0.40 }
+    ]
   }
 ];
+

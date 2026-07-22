@@ -10,22 +10,26 @@ interface ItemCustomizerModalProps {
 }
 
 export const ItemCustomizerModal: React.FC<ItemCustomizerModalProps> = ({ item, onClose, onConfirm }) => {
-  if (!item) return null;
-
   const [quantity, setQuantity] = useState(1);
-  const [selectedSpice, setSelectedSpice] = useState<string | undefined>(
-    item.spiceLevels && item.spiceLevels.length > 0 ? item.spiceLevels[0] : undefined
-  );
+  const [selectedSpice, setSelectedSpice] = useState<string | undefined>(undefined);
   const [selectedAddons, setSelectedAddons] = useState<{ name: string; price: number }[]>([]);
   const [notes, setNotes] = useState('');
 
   // Reset states when item changes
   useEffect(() => {
-    setQuantity(1);
-    setSelectedSpice(item.spiceLevels && item.spiceLevels.length > 0 ? item.spiceLevels[0] : undefined);
-    setSelectedAddons([]);
-    setNotes('');
+    if (item) {
+      setQuantity(1);
+      setSelectedSpice(item.spiceLevels && item.spiceLevels.length > 0 ? item.spiceLevels[0] : undefined);
+      setSelectedAddons([]);
+      setNotes('');
+    }
   }, [item]);
+
+  if (!item) {
+    return (
+      <AnimatePresence />
+    );
+  }
 
   const handleAddonToggle = (addon: { name: string; price: number }) => {
     setSelectedAddons(prev => {
@@ -49,19 +53,22 @@ export const ItemCustomizerModal: React.FC<ItemCustomizerModalProps> = ({ item, 
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        {/* Backdrop overlay */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/70 backdrop-blur-xs"
-        />
-
-        {/* Modal body */}
-        <div className="flex min-h-full items-center justify-center p-4">
+      {item && (
+        <div key={`customizer-${item.id}`} className="fixed inset-0 z-50 overflow-y-auto">
+          {/* Backdrop overlay */}
           <motion.div
+            key="customizer-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/70 backdrop-blur-xs"
+          />
+
+          {/* Modal body */}
+          <div className="flex min-h-full items-center justify-center p-4">
+            <motion.div
+              key="customizer-content"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -139,7 +146,7 @@ export const ItemCustomizerModal: React.FC<ItemCustomizerModalProps> = ({ item, 
                     {item.addons.map((addon) => {
                       const isSelected = selectedAddons.some(a => a.name === addon.name);
                       return (
-                        <label
+                        <div
                           key={addon.name}
                           onClick={() => handleAddonToggle(addon)}
                           className={`flex items-center justify-between p-3 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
@@ -158,7 +165,7 @@ export const ItemCustomizerModal: React.FC<ItemCustomizerModalProps> = ({ item, 
                             <span className="font-sans text-stone-300">{addon.name}</span>
                           </div>
                           <span className="font-mono text-amber-500 font-bold">+${addon.price.toFixed(2)}</span>
-                        </label>
+                        </div>
                       );
                     })}
                   </div>
@@ -223,6 +230,7 @@ export const ItemCustomizerModal: React.FC<ItemCustomizerModalProps> = ({ item, 
           </motion.div>
         </div>
       </div>
+      )}
     </AnimatePresence>
   );
 };

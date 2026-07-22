@@ -24,6 +24,7 @@ export const CategoryFilters: React.FC<CategoryFiltersProps> = ({
 }) => {
   const categories = [
     { id: 'all', label: 'All Items', icon: '🍽️' },
+    { id: 'specials', label: 'Chef Specials', icon: '✨' },
     { id: 'breakfast', label: 'Breakfast', icon: '🍳' },
     { id: 'mains', label: 'Main Course', icon: '🍛' },
     { id: 'snacks', label: 'Starters & Snacks', icon: '🥟' },
@@ -32,7 +33,7 @@ export const CategoryFilters: React.FC<CategoryFiltersProps> = ({
   ];
 
   return (
-    <div className="bg-[#121212] rounded-3xl border border-stone-800 p-5 shadow-lg space-y-4">
+    <div id="menu-filters-section" className="bg-[#121212] rounded-3xl border border-stone-800 p-5 shadow-lg space-y-4">
       {/* Search and Sort row */}
       <div className="flex flex-col lg:flex-row gap-3">
         {/* Search */}

@@ -47,8 +47,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen, currentUser]);
 
-  if (!isOpen) return null;
-
   const handleClose = () => {
     onClose();
   };
@@ -87,24 +85,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={handleClose}
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs"
-        />
-
-        {/* Modal dialog */}
-        <div className="flex min-h-full items-center justify-center p-4">
+      {isOpen && (
+        <div key="auth-modal-wrapper" className="fixed inset-0 z-50 overflow-y-auto">
+          {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            className="relative w-full max-w-md overflow-hidden rounded-3xl bg-[#121212] shadow-2xl border border-stone-800 flex flex-col p-6 sm:p-8"
-          >
+            key="auth-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+          />
+
+          {/* Modal dialog */}
+          <div className="flex min-h-full items-center justify-center p-4">
+            <motion.div
+              key="auth-modal-content"
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-md overflow-hidden rounded-3xl bg-[#121212] shadow-2xl border border-stone-800 flex flex-col p-6 sm:p-8"
+            >
             {/* Close button */}
             <button
               onClick={handleClose}
@@ -498,6 +499,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </motion.div>
         </div>
       </div>
+      )}
     </AnimatePresence>
   );
 };

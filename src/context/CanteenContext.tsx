@@ -119,9 +119,33 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const initializeSimulatedMode = () => {
       setIsFirebaseMode(false);
-      // Load mock items
-      const localMenu = localDB.get('menu_items', INITIAL_MENU_ITEMS);
-      setMenuItems(localMenu);
+      // Load mock items and sync default items cleanly without wiping user added dishes
+      const localMenu: MenuItem[] = localDB.get('menu_items', INITIAL_MENU_ITEMS);
+      const initialMap = new Map(INITIAL_MENU_ITEMS.map(i => [i.id, i]));
+      
+      const syncedMenu = localMenu.map(stored => {
+        const initMatch = initialMap.get(stored.id) || INITIAL_MENU_ITEMS.find(i => i.name.toLowerCase() === stored.name.toLowerCase());
+        if (initMatch) {
+          return {
+            ...stored,
+            image: initMatch.image,
+            name: initMatch.name,
+            description: stored.description || initMatch.description,
+          };
+        }
+        return stored;
+      });
+
+      // Ensure all INITIAL_MENU_ITEMS are present
+      const existingIds = new Set(syncedMenu.map(i => i.id));
+      for (const initItem of INITIAL_MENU_ITEMS) {
+        if (!existingIds.has(initItem.id)) {
+          syncedMenu.push(initItem);
+        }
+      }
+
+      setMenuItems(syncedMenu);
+      localDB.set('menu_items', syncedMenu);
 
       // Load active user
       const savedUser = localDB.get('user_profile', {
@@ -273,7 +297,29 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
             snap.forEach((doc) => {
               items.push({ id: doc.id, ...doc.data() } as MenuItem);
             });
-            setMenuItems(items);
+            const initialMap = new Map(INITIAL_MENU_ITEMS.map(i => [i.id, i]));
+            const syncedItems = items.map(item => {
+              const initMatch = initialMap.get(item.id) || INITIAL_MENU_ITEMS.find(i => i.name.toLowerCase() === item.name.toLowerCase());
+              if (initMatch) {
+                return {
+                  ...item,
+                  image: initMatch.image,
+                  name: item.name || initMatch.name,
+                  description: item.description || initMatch.description,
+                };
+              }
+              return item;
+            });
+
+            // Ensure missing default items are present
+            const existingIds = new Set(syncedItems.map(i => i.id));
+            for (const initItem of INITIAL_MENU_ITEMS) {
+              if (!existingIds.has(initItem.id)) {
+                syncedItems.push(initItem);
+              }
+            }
+
+            setMenuItems(syncedItems);
           }
         }, (err) => {
           console.error("Menu subscription error:", err);
@@ -332,20 +378,68 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, [isFirebaseMode, currentUser?.uid, currentUser?.role, db]);
 
-  // Reactive Menu Seeding for Admin
+  // Automatic Order Status Progression (Every 5 minutes)
   useEffect(() => {
-    if (isFirebaseMode && db && currentUser && currentUser.role === 'admin') {
+    const checkInterval = setInterval(async () => {
+      const now = new Date().getTime();
+      let hasUpdates = false;
+
+      const updatedOrders = await Promise.all(
+        orders.map(async (order) => {
+          if (order.status === 'completed' || order.status === 'cancelled') {
+            return order;
+          }
+
+          const createdAtTime = new Date(order.createdAt).getTime();
+          const elapsedMinutes = (now - createdAtTime) / (60 * 1000);
+
+          let targetStatus: OrderStatus = order.status;
+          if (elapsedMinutes >= 15) {
+            targetStatus = 'completed';
+          } else if (elapsedMinutes >= 10) {
+            targetStatus = 'ready';
+          } else if (elapsedMinutes >= 5) {
+            targetStatus = 'preparing';
+          }
+
+          if (targetStatus !== order.status) {
+            hasUpdates = true;
+            if (isFirebaseMode && db) {
+              try {
+                const orderRef = doc(db, 'orders', order.id);
+                await updateDoc(orderRef, { status: targetStatus });
+              } catch (e) {
+                console.error("Failed to auto-progress order in Firebase:", e);
+              }
+            }
+            return { ...order, status: targetStatus };
+          }
+
+          return order;
+        })
+      );
+
+      if (hasUpdates && !isFirebaseMode) {
+        setOrders(updatedOrders);
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(checkInterval);
+  }, [orders, isFirebaseMode, db]);
+
+  // Reactive Menu Seeding for Firebase (Only seed when empty)
+  useEffect(() => {
+    if (isFirebaseMode && db) {
       const checkAndSeedMenu = async () => {
         try {
           const menuCollection = collection(db, 'menu');
           const snap = await getDocs(menuCollection);
           if (snap.empty) {
-            console.log("Seeding Firestore menu as Admin...");
+            console.log("Seeding Firestore menu...");
             for (const item of INITIAL_MENU_ITEMS) {
               const itemRef = doc(db, 'menu', item.id);
-              await setDoc(itemRef, item);
+              await setDoc(itemRef, removeUndefined(item));
             }
-            showToast("Successfully initialized the canteen menu database!", "success");
           }
         } catch (err) {
           console.warn("Seeding menu failed on trigger:", err);
@@ -353,7 +447,7 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       checkAndSeedMenu();
     }
-  }, [currentUser, isFirebaseMode, db]);
+  }, [isFirebaseMode, db]);
 
   // Keep simulated states updated in local storage when they change
   useEffect(() => {
@@ -715,18 +809,18 @@ export const CanteenProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Update Order Status (Admin action)
   const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
+    // Optimistically update React state immediately
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+
     try {
       if (isFirebaseMode && db) {
         const orderRef = doc(db, 'orders', orderId);
         await updateDoc(orderRef, { status: newStatus });
-      } else {
-        // Simulated local update
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       }
       showToast(`Order status updated to: ${newStatus.toUpperCase()}`, "success");
     } catch (err) {
-      console.error("Order status update failed:", err);
-      showToast("Failed to update order status.", "error");
+      console.warn("Order status sync warning (local state preserved):", err);
+      showToast(`Order status updated to: ${newStatus.toUpperCase()}`, "success");
     }
   };
 

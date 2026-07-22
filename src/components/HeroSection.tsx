@@ -5,9 +5,10 @@ import { useCanteen } from '../context/CanteenContext';
 
 interface HeroSectionProps {
   onCartOpen: () => void;
+  onExploreSpecials?: () => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onCartOpen }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onCartOpen, onExploreSpecials }) => {
   const { setActiveView, currentUser } = useCanteen();
 
   const promotions = [
@@ -15,7 +16,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCartOpen }) => {
       badge: 'YOUR FOOD BASKET',
       title: 'Ready to Feast? View Your Cart',
       desc: 'Inspect your chosen meals, add custom chef instructions, configure spice levels, and place your order with your preloaded digital wallet.',
-      bg: 'from-amber-500 to-amber-600 shadow-amber-500/5',
+      bg: 'from-amber-500 to-orange-600 shadow-orange-500/5',
       textClass: 'text-[#0a0a0a]',
       descClass: 'text-[#0a0a0a]/80',
       badgeClass: 'bg-[#0a0a0a]/10 text-[#0a0a0a] border-[#0a0a0a]/10',
@@ -24,6 +25,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCartOpen }) => {
       icon: ShoppingCart,
       action: onCartOpen,
       btnText: 'View Cart'
+    },
+    {
+      badge: 'CHEF\'S CHOICE',
+      title: 'Premium Hand-Crafted Entrées',
+      desc: 'Indulge in seasonal specials sourced from fresh campus ingredients, prepared fresh on demand by our amazing culinary team.',
+      bg: 'from-stone-900 to-stone-950 border border-stone-800',
+      textClass: 'text-stone-100',
+      descClass: 'text-stone-400',
+      badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+      btnClass: 'bg-amber-500 text-stone-950 hover:bg-amber-400',
+      iconBgClass: 'bg-amber-500/10 border-amber-550/20 text-amber-400',
+      icon: Sparkles,
+      action: onExploreSpecials || (() => setActiveView('menu')),
+      btnText: 'Explore Specials'
     }
   ];
 
@@ -32,13 +47,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCartOpen }) => {
       {/* Dynamic Welcome Greeting */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-stone-100 tracking-tight font-sans">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">CanteenDelight</span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-100 tracking-tight font-sans">
+            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">CanteenDelight</span>
           </h1>
           <p className="text-stone-400 text-sm sm:text-base mt-1">
             {currentUser 
-              ? `Hello, ${currentUser.name}! What delicious meal would you like to order today?`
-              : "Discover chef-crafted meals, pre-order for pick-up, and dine at your convenience!"
+              ? `Hello, ${currentUser.name}! What delicious meal would you like to savor today?`
+              : "Discover chef-crafted meals, pre-order for seamless pickup, and dine in comfort!"
             }
           </p>
         </div>
@@ -49,7 +64,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCartOpen }) => {
       </div>
 
       {/* Hero promo cards grid */}
-      <div className="grid grid-cols-1 max-w-3xl mx-auto w-full gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {promotions.map((promo, idx) => {
           const Icon = promo.icon;
           return (

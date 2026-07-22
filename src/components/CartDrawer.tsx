@@ -25,8 +25,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onAuthO
   const [specialNotes, setSpecialNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!isOpen) return null;
-
   const total = getCartTotal();
   const tax = Number((total * 0.05).toFixed(2)); // 5% service charge
   const finalTotal = Number((total + tax).toFixed(2));
@@ -65,19 +63,22 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onAuthO
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-hidden">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/70 backdrop-blur-xs"
-        />
-
-        {/* Drawer panel */}
-        <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+      {isOpen && (
+        <div key="cart-drawer-wrapper" className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
           <motion.div
+            key="cart-drawer-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/70 backdrop-blur-xs"
+          />
+
+          {/* Drawer panel */}
+          <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+            <motion.div
+              key="cart-drawer-panel"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -106,9 +107,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onAuthO
               {cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 text-center">
                   <ShoppingBag className="h-12 w-12 text-stone-700 mb-3" />
-                  <h4 className="text-sm font-bold text-stone-400 font-sans">Your basket is empty</h4>
+                  <h4 className="text-sm font-bold text-stone-400 font-sans">Your cart is empty</h4>
                   <p className="text-xs text-stone-500 mt-1 max-w-xs">
-                    Browse our gourmet campus menu and customize your delicious meal to get started!
+                    Browse our delicious campus menu and customize your delicious meal to get started!
                   </p>
                   <button
                     onClick={onClose}
@@ -269,7 +270,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onAuthO
                 </>
               )}
             </div>
-
+ 
             {/* Bottom Checkout details drawer */}
             {cart.length > 0 && (
               <div className="p-6 bg-[#1a1a1a] border-t border-stone-850 space-y-4">
@@ -288,7 +289,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onAuthO
                     <span className="font-mono text-amber-500 text-base">${finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
-
+ 
                 {/* Authentication / Wallet condition banner */}
                 {currentUser ? (
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-stone-900 border border-stone-850 text-xs font-sans shadow-xxs">
@@ -302,7 +303,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onAuthO
                   </div>
                 ) : (
                   <div className="bg-amber-950/20 border border-amber-900/40 p-3 rounded-2xl text-xs text-amber-400 text-center font-sans font-medium">
-                    You must sign in to pay using your canteen digital balance.
+                    You must sign in to pay using your CanteenDelight digital balance.
                   </div>
                 )}
 
@@ -339,6 +340,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onAuthO
           </motion.div>
         </div>
       </div>
+      )}
     </AnimatePresence>
   );
 };

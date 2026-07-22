@@ -40,7 +40,9 @@ function AppContent() {
     let items = [...menuItems];
 
     // Category
-    if (selectedCategory !== 'all') {
+    if (selectedCategory === 'specials') {
+      items = items.filter(i => i.rating >= 4.8);
+    } else if (selectedCategory !== 'all') {
       items = items.filter(i => i.category === selectedCategory);
     }
 
@@ -80,6 +82,16 @@ function AppContent() {
     addToCart(item, 1, item.spiceLevels?.[0], []);
   };
 
+  const handleExploreSpecials = () => {
+    setSelectedCategory('specials');
+    setTimeout(() => {
+      const el = document.getElementById('menu-filters-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center font-sans">
@@ -109,7 +121,10 @@ function AppContent() {
         {/* VIEW 1: FOOD MENU EXPLORER */}
         {activeView === 'menu' && (
           <div className="space-y-6">
-            <HeroSection onCartOpen={() => setCartOpen(true)} />
+            <HeroSection 
+              onCartOpen={() => setCartOpen(true)} 
+              onExploreSpecials={handleExploreSpecials}
+            />
             
             <CategoryFilters
               searchQuery={searchQuery}
